@@ -40,7 +40,7 @@ Ayoayo.prototype.play = function play(cell) {
     this.board,
     this.nextPlayer,
     cell,
-    (eventType, ...args) => this.emit(eventType, ...args),
+    (eventType, ...args) => this.emit(eventType, ...args)
   );
   this.captured[0] += captured[0];
   this.captured[1] += captured[1];
@@ -49,33 +49,25 @@ Ayoayo.prototype.play = function play(cell) {
   this.nextPlayer = Ayoayo.togglePlayer(this.nextPlayer);
   this.emit(Ayoayo.events.SWITCH_TURN, this.nextPlayer);
 
-  this.permissibleMoves = Ayoayo.getPermissibleMoves(
-    this.board,
-    this.nextPlayer,
-  );
+  this.permissibleMoves = Ayoayo.getPermissibleMoves(this.board, this.nextPlayer);
 
   // No point proceeding if the next player has no more moves,
   // or if someone has more than half of the seeds
+  //or only 4 seed remaining on the board
   const shouldEndGame =
     this.permissibleMoves.length == 0 ||
-    this.captured.some((count) => count > Ayoayo.TOTAL_NUM_SEEDS / 2);
+    this.captured.some((count) => count > Ayoayo.TOTAL_NUM_SEEDS / 2) ||
+    this.captured[0] + this.captured[1] === Ayoayo.TOTAL_NUM_SEEDS - 4;
   // Capture remaining seeds if the opponent is out of moves
   const shouldCaptureRemainingSeeds = this.permissibleMoves.length == 0;
 
   if (shouldCaptureRemainingSeeds) {
     let numRemainingSeeds = 0;
-    this.board[this.nextPlayer] = this.board[this.nextPlayer].map(
-      (cell, index) => {
-        numRemainingSeeds += cell;
-        this.emit(
-          Ayoayo.events.CAPTURE,
-          this.nextPlayer,
-          index,
-          this.nextPlayer,
-        );
-        return 0;
-      },
-    );
+    this.board[this.nextPlayer] = this.board[this.nextPlayer].map((cell, index) => {
+      numRemainingSeeds += cell;
+      this.emit(Ayoayo.events.CAPTURE, this.nextPlayer, index, this.nextPlayer);
+      return 0;
+    });
     this.captured[this.nextPlayer] += numRemainingSeeds;
   }
 
@@ -106,7 +98,7 @@ Ayoayo.relaySow = function relaySow(
   board,
   player,
   cell,
-  emit = function (_eventType, ..._args) {},
+  emit = function (_eventType, ..._args) {}
 ) {
   const captured = [0, 0];
 
@@ -147,11 +139,7 @@ Ayoayo.relaySow = function relaySow(
 
     // Move to next position
     const nextPosition = Ayoayo.next(nextPositionRow, nextPositionCell);
-    emit(
-      Ayoayo.events.MOVE_TO,
-      [nextPositionRow, nextPositionCell],
-      nextPosition,
-    );
+    emit(Ayoayo.events.MOVE_TO, [nextPositionRow, nextPositionCell], nextPosition);
     [nextPositionRow, nextPositionCell] = nextPosition;
   }
 
@@ -195,9 +183,7 @@ Ayoayo.getWinner = function getWinner(captured) {
 // Returns the next position moving counter-clockwise from the given row and cell
 Ayoayo.next = function next(row, cell) {
   if (row == 0) return cell == 0 ? [1, 0] : [0, cell - 1];
-  return cell == Ayoayo.NUM_CELLS_PER_ROW - 1
-    ? [0, Ayoayo.NUM_CELLS_PER_ROW - 1]
-    : [1, cell + 1];
+  return cell == Ayoayo.NUM_CELLS_PER_ROW - 1 ? [0, Ayoayo.NUM_CELLS_PER_ROW - 1] : [1, cell + 1];
 };
 
 // Returns a new instance of Ayoayo that plays
